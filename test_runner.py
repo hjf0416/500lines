@@ -33,8 +33,8 @@ class TestHandler(SocketServer.BaseRequestHandler):
         result_file = open("results", "r")
         output = result_file.read()
         helpers.communicate(self.server.dispatcher_server["host"],
-                        int(self.server.dispatcher_server["port"],
-                        "results:%s:%s:%s" % (commit_id, len(output), output)))
+                        int(self.server.dispatcher_server["port"]),
+                        "results:%s:%s:%s" % (commit_id, len(output), output))
 
     def handle(self):
         self.data = self.request.recv(1024).strip()
@@ -51,7 +51,7 @@ class TestHandler(SocketServer.BaseRequestHandler):
         elif command == "runtest":
             print "got runtest command: am I busy %s" % self.server.busy
             if self.server.busy:
-                slef.request.sendall("Busy")
+                self.request.sendall("Busy")
             else:
                 self.request.sendall("OK")
                 print "running"
