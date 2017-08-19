@@ -8,7 +8,7 @@ import threading
 
 import helpers
 
-def dispatch_tests(serve, commit_id):
+def dispatch_tests(server, commit_id):
     while True:
         print "trying to dispatch to runners"
         for runner in server.runners:
