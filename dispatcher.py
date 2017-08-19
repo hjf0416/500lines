@@ -12,7 +12,7 @@ def dispatch_tests(server, commit_id):
     while True:
         print "trying to dispatch to runners"
         for runner in server.runners:
-            response = helpers.communicate(runner["host"], int(runner["port"]), "runtests:%s" % commit_id)
+            response = helpers.communicate(runner["host"], int(runner["port"]), "runtest:%s" % commit_id)
 
             if response == "OK":
                 print "adding id %s" % commit_id 
@@ -42,10 +42,10 @@ class DispatcherHandler(SocketServer.BaseRequestHandler):
             print "in status"
             self.request.sendall("OK")
         elif command == "register":
-            print "register"
             address = command_groups.group(2)
             host, port = re.findall(r":(\w*)", address)
             runner = {"host": host, "port": port}
+            print ("register %s:%s" %(host,port))
             self.server.runners.append(runner);
             self.request.sendall("OK")
         elif command == "dispatch":
@@ -97,18 +97,18 @@ def serve():
                     del server.dispatched_commits[commit]
                     server.pending_commits.append(commit)
                     break
-                server.runner.remove(runner);
+            server.runners.remove(runner);
         while not server.dead:
             time.sleep(1)
             for runner in server.runners:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                print "check " + runner["host"] + " : "+ runner["port"] 
                 try:
                     response = helpers.communicate(runner["host"], int(runner["port"]), "ping")
-                    
-                    if response != "pong":
+                    if response == None or response != "pong":
                         print "removing runner %s" % runner
                         manage_commit_lists(runner)
                 except socket.error as e:
+                    print "removing runner %s" % runner
                     manage_commit_lists(runner)
 
     def redistribute(server):

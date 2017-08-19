@@ -51,7 +51,7 @@ class TestHandler(SocketServer.BaseRequestHandler):
         elif command == "runtest":
             print "got runtest command: am I busy %s" % self.server.busy
             if self.server.busy:
-                sle.request.sendall("Busy")
+                slef.request.sendall("Busy")
             else:
                 self.request.sendall("OK")
                 print "running"
