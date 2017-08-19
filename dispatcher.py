@@ -62,7 +62,7 @@ class DispatcherHandler(SocketServer.BaseRequestHandler):
             results = results.split(":")
             commit_id = results[0]
             length_msg = int(results[1])
-            remaining_buf = self.BUF_SIZE-(len(command) + len(commit_id) + len(results[1] + 3))
+            remaining_buffer = self.BUF_SIZE-(len(command) + len(commit_id) + len(results[1]) + 3)
             
             if length_msg > remaining_buffer:
                 self.data += self.request.recv(length_msg - remaining_buffer).strip()

@@ -1,0 +1,16 @@
+F.
+======================================================================
+FAIL
+ test_fail (test_fail.TestFileFail)
+----------------------------------------------------------------------
+Traceback (most recent call last)
+
+  File "/home/jhuang/learn/500line/test_repo/tests/tests/test_fail.py", line 6, in test_fail
+    self.fail("I will fail")
+AssertionError
+ I will fail
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.000s
+
+FAILED (failures=1)
