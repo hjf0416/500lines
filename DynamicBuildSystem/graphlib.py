@@ -33,25 +33,55 @@ class Graph:
         for input in input_tasks:
             self._consequences_of[input].remove(task)
         
+    def toplogical_sort(self, tasks):   
+        indegree = defaultdict(int);
+        result = []
+        def dfs(node):
+            result.append(node)
+            indegree[node] -= 1
+            for nextnode in self.immediate_consequences_of(node):
+                indegree[nextnode] = indegree[nextnode] - 1
+                if indegree[nextnode] == 0:
+                    dfs(nextnode)
+        
+        for x in tasks:
+            indegree[x] = 0
+        
+        for task in tasks:
+            outs = self.immediate_consequences_of(task)
+            for out in outs:
+                indegree[out] = indegree[out] + 1
+
+        print indegree
+                
+        for k, v in indegree.iteritems():
+            if v == 0:
+                dfs(k)
+            
+        return result
+    
     def recursive_consequences_of(self, tasks):
         """Get recursive consequences of tasks"""
         def visit(result, tasks):
             for task in tasks:
-                result.add(task)
-                visit(result, self.immediate_consequences_of(task))
+                if result.count(task) == 0:
+                    result.append(task)
+                    visit(result, self.immediate_consequences_of(task))
         
-        result = set()
+        result = list()
         visit(result, tasks)
         for task in tasks:
             result.remove(task)
-        return result
+            
+        return self.toplogical_sort(result)
 
 g = Graph()
-g.add_edge('index.rst', 'index.html')
-g.add_edge('api.rst', 'api.html')
-g.add_edge('tutorial.rst', 'tutorial.html')
-
-g.add_edge('api.rst', 'api-title')
-g.add_edge('api-title', 'index.html')
-g.add_edge('tutorial.rst', 'tutorial-title')
-g.add_edge('tutorial-title', 'index.html')
+g.add_edge("d", "g")
+g.add_edge("b", "c")
+g.add_edge("b", "e")
+g.add_edge("e", "f")
+g.add_edge("f", "g")
+g.add_edge("i", "a")
+g.add_edge("h", "b")
+g.add_edge("a", "c")
+g.add_edge("c", "d")
