@@ -51,16 +51,14 @@ class Graph:
             outs = self.immediate_consequences_of(task)
             for out in outs:
                 indegree[out] = indegree[out] + 1
-
-        print indegree
-                
+           
         for k, v in indegree.iteritems():
             if v == 0:
                 dfs(k)
             
         return result
     
-    def recursive_consequences_of(self, tasks):
+    def recursive_consequences_of(self, tasks, include = False):
         """Get recursive consequences of tasks"""
         def visit(result, tasks):
             for task in tasks:
@@ -70,8 +68,9 @@ class Graph:
         
         result = list()
         visit(result, tasks)
-        for task in tasks:
-            result.remove(task)
+        if (include == False):
+            for task in tasks:
+                result.remove(task)
             
         return self.toplogical_sort(result)
 
@@ -85,3 +84,4 @@ g.add_edge("i", "a")
 g.add_edge("h", "b")
 g.add_edge("a", "c")
 g.add_edge("c", "d")
+

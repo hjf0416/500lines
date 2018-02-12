@@ -1,7 +1,13 @@
+
+# coding: utf-8
+
+# In[124]:
+
+
 from graphlib import Graph
 from functools import wraps
 from contextlib import contextmanager
-from collections import namedtuple
+import pdb
 import re
 
 
@@ -71,27 +77,30 @@ class Project:
         tup = (len(self._task_stack), return_value is None, task)
         self._trace.append(tup)
     
-    def pre_process(self, function, *args):
-        task = Task(function, *args);
-        if self._task_stack:
-            self._graph.add_edge(task, self._task_stack[-1])
+    def task(self, function):
+        @wraps(function)
+        def wrapper(*args):
+            task = Task(function, *args)
+            if self._task_stack:
+                self._graph.add_edge(task, self._task_stack[-1])
+                
+            return_value = self._get_from_cache(task)
             
-        return_value = self._get_from_cache(task)
-        
-        if self._trace is not None:
-            self._add_task_to_trace(task, return_value)
-        
-        if return_value is None:
-            self._graph.clear_inputs_of(task)
-            self._task_stack.append(task)
-        
-        return return_value
-        
-    def post_process(self, return_value, function, *args):
-        task = Task(function, *args);
-        self._task_stack.pop()
-        self.set(task, return_value)
-
+            if self._trace is not None:
+                self._add_task_to_trace(task, return_value)
+            
+            if return_value is None:
+                self._graph.clear_inputs_of(task)
+                self._task_stack.append(task)
+                try:
+                    return_value = task.exe()
+                finally:
+                    self._task_stack.pop()
+                self.set(task, return_value)
+                
+            return return_value
+        return wrapper
+    
     @contextmanager
     def cache_off(self):
         """Context manager that forces tasks to really be invoked.
@@ -124,10 +133,9 @@ class Task:
     
     def __repr__(self):
         return '{}({})'.format(self.function.__name__,', '.join(repr(arg) for arg in self.args))
-    
+
 project = Project()
-pre_process = project.pre_process
-post_process = project.post_process
+task = project.task
 
 index = """
 Table of Contents
@@ -156,62 +164,81 @@ filesystem = {'index.txt': index,
 LINK = '<a href="{}">{}</a>'
 PAGE = '<h1>{}</h1>\n<p>\n{}\n<p>'
 
+
+@task
 def read(filename):
-    ret = pre_process(read, filename)
-    if ret is None:
-        ret = filesystem[filename]
-        
-        post_process(ret, read, filename)
-        
-    return ret
+    return filesystem[filename]
 
+@task
 def parse(filename):
-    ret = pre_process(parse, filename)
-    if ret is None:
-        lines = read(filename).strip().splitlines()
-        title = lines[0]
-        body = '\n'.join(lines[2:])
-        ret = (title, body)
-        
-        post_process(ret, parse, filename)
-    
-    return ret
+    lines = read(filename).strip().splitlines()
+    title = lines[0]
+    body = '\n'.join(lines[2:])
+    return title, body
 
+@task
 def title_of(filename):
-    ret = pre_process(title_of, filename)
-    if ret is None:
-        title, body = parse(filename)
-        ret = title
-        
-        post_process(ret, title_of, filename)
-        
-    return ret
+    title, body = parse(filename)
+    return title
 
+@task
 def body_of(filename):
-    ret = pre_process(body_of, filename)
-    if ret is None:
-        title, body = parse(filename)
-        ret = body
-        
-        post_process(ret, body_of, filename)
-        
-    return ret
+    title, body = parse(filename)
+    return body
 
 def make_link(match):
     filename = match.group(1)
     print filename, title_of(filename)
     return LINK.format(filename, title_of(filename))
 
+@task
 def render(filename):
-    ret = pre_process(render, filename)
-    if ret is None:
-        title, body = parse(filename)
-        body = re.sub(r'`([^`]+)`', make_link, body)
-        ret = PAGE.format(title, body)
-        
-        post_process(ret, render, filename)
-        
-    return ret
+    title, body = parse(filename)
+    body = re.sub(r'`([^`]+)`', make_link, body)
+    return PAGE.format(title,body)
 
 for filename in 'index.txt', 'tutorial.txt', 'api.txt':
     render(filename);
+    
+project._graph.edges();
+task = Task(read, ('index.txt'));
+
+
+# In[125]:
+
+
+filesystem['tutorial.txt'] ="""
+Beginners Tutorial
+------------------
+This is a new and improved
+paragraph
+"""
+
+with project.cache_off():
+    text = read('tutorial.txt')
+
+
+# In[126]:
+
+
+project._graph.recursive_consequences_of(project._todo, True)
+
+
+# In[127]:
+
+
+project._todo
+
+
+# In[128]:
+
+pdb.set_trace()
+for task in project._graph.recursive_consequences_of(project._todo, True):
+    task.exe()
+
+
+# In[129]:
+
+
+task1 = Task(render, ('tutorial.txt'))
+task1.exe()
