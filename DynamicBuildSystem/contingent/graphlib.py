@@ -73,15 +73,3 @@ class Graph:
                 result.remove(task)
             
         return self.toplogical_sort(result)
-
-g = Graph()
-g.add_edge("d", "g")
-g.add_edge("b", "c")
-g.add_edge("b", "e")
-g.add_edge("e", "f")
-g.add_edge("f", "g")
-g.add_edge("i", "a")
-g.add_edge("h", "b")
-g.add_edge("a", "c")
-g.add_edge("c", "d")
-
