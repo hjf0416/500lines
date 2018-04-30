@@ -14,7 +14,8 @@ class case_no_file(object):
 
 class case_existing_file(object):
     def test(self, handler):
-        return os.path.exists(handler.full_path)
+        return os.path.exists(handler.full_path) and \
+                not os.path.isdir(handler.full_path)
 
     def act(self, handler):
         handler.handle_file(handler.full_path)
@@ -32,7 +33,7 @@ class case_directory_index_file(object):
 
     def test(self, handler):
         return os.path.isdir(handler.full_path) and \
-                os.path_isfile(self.index_path(handler))
+                os.path.isfile(self.index_path(handler))
 
     def act(self, handler):
         handler.handle_file(self.index_path(handler))
@@ -46,7 +47,7 @@ class case_directory_no_index_file(object):
                 not os.path.isfile(self.index_path(handler))
 
     def act(self, handler):
-        handler.list_dir(handler.full_path)
+        handler.list_dir()
 
 class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     Page = """
@@ -93,10 +94,11 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def list_dir(self):
         try:
-            entries = os.listdir(full_path)
+            entries = os.listdir(self.full_path)
             bullets = ['<li>{0}</li>'.format(e) 
                     for e in entries if not e.startswith('.')]
             page = self.Listing_Page.format('\n'.join(bullets))
+            print page
             self.send_content(page)
 
         except error as msg:
